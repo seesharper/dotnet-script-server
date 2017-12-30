@@ -2,14 +2,11 @@
 {
     public class PackageQueryResult
     {
-        public PackageQueryResult(string id, string version)
+        public PackageQueryResult(string id)
         {
-            Id = id;
-            Version = version;
+            Id = id;            
         }
 
         public string Id { get; }
-
-        public string Version { get; }
     }
 }

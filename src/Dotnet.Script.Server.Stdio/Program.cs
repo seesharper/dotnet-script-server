@@ -1,9 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Threading;
-using LightInject;
-
-namespace Dotnet.Script.Server.Stdio
+﻿namespace Dotnet.Script.Server.Stdio
 {
     class Program
     {
