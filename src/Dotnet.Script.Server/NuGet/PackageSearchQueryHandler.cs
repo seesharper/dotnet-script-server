@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Dotnet.Script.Server.CQRS;
 using Dotnet.Script.Server.Logging;
@@ -19,7 +20,7 @@ namespace Dotnet.Script.Server.NuGet
             _logger = logger;
         }
 
-        public async Task<PackageQueryResult[]> HandleAsync(PackageQuery query)
+        public async Task<PackageQueryResult[]> HandleAsync(PackageQuery query, CancellationToken cancellationToken)
         {
             var sourceRepositoryProvider = _sourceRepositoryProviderFactory.CreateProvider(query.RootFolder);
             var packages = new HashSet<PackageQueryResult>();
@@ -29,7 +30,7 @@ namespace Dotnet.Script.Server.NuGet
                 {
                     var packageSearchResource = await sourceRepository.GetResourceAsync<PackageSearchResource>();
                     var results = await packageSearchResource.SearchAsync(query.SearchTerm, new SearchFilter(query.IncludePreRelease), 0,
-                        int.MaxValue, new NuGetLogger(_logger), query.GetCancellationToken());
+                        int.MaxValue, new NuGetLogger(_logger), cancellationToken);
                     foreach (var result in results.ToArray())
                     {
                         try
