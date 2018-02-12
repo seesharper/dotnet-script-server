@@ -1,21 +1,32 @@
 #! "netcoreapp2.0"
-#r "nuget:Octokit, 0.27.0"
-#load "Git.csx"
-#load "Changelog.csx"
 #load "BuildContext.csx"
-#load "DotNet.csx"
-#load "FileUtils.csx"
-#load "GitHub.csx"
-#load "NuGet.csx"
-#load "Logger.csx"
+#load "nuget:Dotnet.Build, 0.2.1"
+#load "nuget:github-changelog, 0.1.2"
+
+using static ChangeLog;
+using static ReleaseManagement;
+
 
 DotNet.Build(BuildContext.PathToProjectFolder);
-DotNet.Publish(BuildContext.PathToProjectFolder);
-DotNet.Pack(BuildContext.PathToProjectFolder, BuildContext.NuGetPackagesFolder);
-GitHub.Pack(BuildContext.PathToPublishFolder, BuildContext.GitHubReleaseFolder);
+DotNet.Test(BuildContext.PathToTestProjectFolder);
 
-if (Git.IsTagCommit())
-{            
-    NuGet.Push(BuildContext.NuGetPackagesFolder);    
-    GitHub.CreateRelease(BuildContext.GitHubReleaseFolder);       
+FileUtils.Zip(BuildContext.PathToPublishFolder,BuildContext.PathToReleaseAsset);
+if (BuildEnvironment.IsSecure)
+{    
+    var generator = ChangeLogFrom("seesharper","dotnet-script-server", BuildEnvironment.GitHubAccessToken).SinceLatestTag();
+    if (!Git.Default.IsTagCommit())
+    {
+        generator = generator.IncludeUnreleased();
+    }
+    await generator.Generate(BuildContext.PathToReleaseNotes);
+
+    if (Git.Default.IsTagCommit())
+    {
+        var releaseManager = ReleaseManagerFor("seesharper", "dotnet-script-server", BuildEnvironment.GitHubAccessToken);
+        var releaseAssets = new [] { new ZipReleaseAsset(BuildContext.PathToReleaseAsset)};
+        await releaseManager.CreateRelease(Git.Default.GetLatestTag(),BuildContext.PathToReleaseNotes, releaseAssets);
+    }
 }
+
+
+
