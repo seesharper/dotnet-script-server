@@ -10,6 +10,7 @@ using static ReleaseManagement;
 DotNet.Build(BuildContext.PathToProjectFolder);
 DotNet.Test(BuildContext.PathToTestProjectFolder);
 
+DotNet.Publish(BuildContext.PathToProjectFolder);
 FileUtils.Zip(BuildContext.PathToPublishFolder,BuildContext.PathToReleaseAsset);
 if (BuildEnvironment.IsSecure)
 {    
