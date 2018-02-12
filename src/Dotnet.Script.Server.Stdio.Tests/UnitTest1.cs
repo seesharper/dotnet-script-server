@@ -59,7 +59,7 @@ namespace Dotnet.Script.Server.Stdio.Tests
         {
             const string errorMessage = "This is an error message";
             var throwingQueryHandler = new Mock<IQueryHandler<PackageQuery, PackageQueryResult[]>>();
-            throwingQueryHandler.Setup(h => h.HandleAsync(It.IsAny<PackageQuery>()))
+            throwingQueryHandler.Setup(h => h.HandleAsync(It.IsAny<PackageQuery>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new Exception(errorMessage));
 
 

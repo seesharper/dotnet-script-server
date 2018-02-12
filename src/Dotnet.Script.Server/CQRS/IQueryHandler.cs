@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 
 namespace Dotnet.Script.Server.CQRS
 {
@@ -15,7 +16,8 @@ namespace Dotnet.Script.Server.CQRS
         /// Handles the given <paramref name="query"/> and returns a result of type <typeparamref name="TResult"/>.
         /// </summary>
         /// <param name="query">The query to be handled.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>The result of the query.</returns>
-        Task<TResult> HandleAsync(TQuery query);
+        Task<TResult> HandleAsync(TQuery query, CancellationToken cancellationToken = default(CancellationToken));
     }
 }

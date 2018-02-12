@@ -37,17 +37,18 @@ namespace Dotnet.Script.Server.CQRS
         /// </summary>
         /// <typeparam name="TResult">The type of result returned by the query.</typeparam>
         /// <param name="query">The query to be executed.</param>
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>The result from the query.</returns>
-        public async Task<TResult> ExecuteAsync<TResult>(IQuery<TResult> query)
+        public async Task<TResult> ExecuteAsync<TResult>(IQuery<TResult> query, CancellationToken cancellationToken)
         {
             var queryDelegate = Cache<TResult>.GetOrAdd(query.GetType(), CreateDelegate<TResult>);
-            return await queryDelegate(_factory, query);
+            return await queryDelegate(_factory, query, cancellationToken);
         }
 
-        private static Func<IServiceFactory, IQuery<TResult>, Task<TResult>> CreateDelegate<TResult>(Type queryType)
+        private static Func<IServiceFactory, IQuery<TResult>, CancellationToken, Task<TResult>> CreateDelegate<TResult>(Type queryType)
         {
             // Define the signature of the dynamic method.
-            var dynamicMethod = new System.Reflection.Emit.DynamicMethod("DynamicMethod", typeof(Task<TResult>), new[] { typeof(IServiceFactory), typeof(IQuery<TResult>) });
+            var dynamicMethod = new System.Reflection.Emit.DynamicMethod("DynamicMethod", typeof(Task<TResult>), new[] { typeof(IServiceFactory), typeof(IQuery<TResult>) , typeof(CancellationToken) });
             System.Reflection.Emit.ILGenerator generator = dynamicMethod.GetILGenerator();
 
             // Create the closed generic query handler type.
@@ -73,12 +74,15 @@ namespace Dotnet.Script.Server.CQRS
 
             // Push the query onto the evaluation stack.
             generator.Emit(OpCodes.Ldarg_1);
-
+            
             // The query is passed in as an IQuery<TResult> instance
             // and we need to cast it to the actual query type.
             generator.Emit(OpCodes.Castclass, queryType);
 
-            // Call the Aql method and push the Task<TResult>
+            //Push the cancellationtoken onto the evaluation stack.
+            generator.Emit(OpCodes.Ldarg_2);
+
+            // Call the HandleAsync method and push the Task<TResult>
             // onto the evaluation stack.
             generator.Emit(OpCodes.Callvirt, method);
 
@@ -86,17 +90,17 @@ namespace Dotnet.Script.Server.CQRS
             generator.Emit(OpCodes.Ret);
 
             var getQueryHandlerDelegate =
-                dynamicMethod.CreateDelegate(typeof(Func<IServiceFactory, IQuery<TResult>, Task<TResult>>));
+                dynamicMethod.CreateDelegate(typeof(Func<IServiceFactory, IQuery<TResult>, CancellationToken, Task<TResult>>));
 
-            return (Func<IServiceFactory, IQuery<TResult>, Task<TResult>>)getQueryHandlerDelegate;
+            return (Func<IServiceFactory, IQuery<TResult>, CancellationToken, Task<TResult>>)getQueryHandlerDelegate;
         }
 
         private static class Cache<TResult>
         {
-            private static ImmutableHashTree<Type, Func<IServiceFactory, IQuery<TResult>, Task<TResult>>> hashTree =
-                ImmutableHashTree<Type, Func<IServiceFactory, IQuery<TResult>, Task<TResult>>>.Empty;
+            private static ImmutableHashTree<Type, Func<IServiceFactory, IQuery<TResult>, CancellationToken, Task<TResult>>> hashTree =
+                ImmutableHashTree<Type, Func<IServiceFactory, IQuery<TResult>, CancellationToken, Task<TResult>>>.Empty;
 
-            public static Func<IServiceFactory, IQuery<TResult>, Task<TResult>> GetOrAdd(Type queryType, Func<Type, Func<IServiceFactory, IQuery<TResult>, Task<TResult>>> delegateFactory)
+            public static Func<IServiceFactory, IQuery<TResult>, CancellationToken, Task<TResult>> GetOrAdd(Type queryType, Func<Type, Func<IServiceFactory, IQuery<TResult>, CancellationToken, Task<TResult>>> delegateFactory)
             {
                 var func = hashTree.Search(queryType);
                 if (func == null)
