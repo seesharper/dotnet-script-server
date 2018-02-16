@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,7 +35,7 @@ namespace Dotnet.Script.Server.Stdio
             {
                 while (!cancellationTokenSource.IsCancellationRequested)
                 {
-                    var request = await _input.ReadRequestAsync();
+                    var request = await _input.ReadRequestAsync();                    
                     if (request.Type == RequestType.Stop)
                     {
                         cancellationTokenSource.Cancel();
@@ -55,12 +56,12 @@ namespace Dotnet.Script.Server.Stdio
             try
             {
                 var result = await _requestHandlers[request.Type](request.Payload);
-                var response = new Response(request.Type, result);
+                var response = new Response(request.Id, request.Type, result);
                 await _output.WriteResponseAsync(response);
             }
             catch (Exception e)
             {
-                var response = new Response(request.Type, e.ToString(), false);
+                var response = new Response(request.Id, request.Type, e.ToString(), false);
                 await _output.WriteResponseAsync(response);
             }            
         }

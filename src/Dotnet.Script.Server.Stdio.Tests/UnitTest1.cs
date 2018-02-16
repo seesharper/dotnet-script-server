@@ -86,11 +86,11 @@ namespace Dotnet.Script.Server.Stdio.Tests
         private TextReader CreateReaderWithPackageQuery(string packageId)
         {
             var query = new PackageQuery(packageId, Environment.CurrentDirectory, true);
-            var request = new Request("PackageQuery", query);
+            var request = new Request(1, "PackageQuery", query);
             var json = JsonConvert.SerializeObject(request);
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(json);
-            sb.AppendLine(JsonConvert.SerializeObject(new Request("Stop")));
+            sb.AppendLine(JsonConvert.SerializeObject(new Request(2, "Stop")));
 
             var stringReader = new StringReader(sb.ToString()); 
             return stringReader;

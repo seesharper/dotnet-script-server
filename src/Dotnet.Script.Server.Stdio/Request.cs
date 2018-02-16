@@ -2,14 +2,16 @@
 {
     public class Request
     {
-        public Request(string type, object payload = null)
+        public Request(long id, string type, object payload = null)
         {
+            Id = id;
             Type = type;
-            Payload = payload;
+            Payload = payload;            
         }
 
         public string Type { get;  }
 
         public object Payload { get; }
+        public long Id { get; }
     }
 }

@@ -28,15 +28,16 @@ namespace Dotnet.Script.Server.NuGet
             {
                 foreach (var sourceRepository in sourceRepositoryProvider.GetRepositories())
                 {
-                    var packageSearchResource = await sourceRepository.GetResourceAsync<PackageSearchResource>();
+                    var packageSearchResource = await sourceRepository.GetResourceAsync<PackageSearchResource>(cancellationToken);
                     var results = await packageSearchResource.SearchAsync(query.SearchTerm, new SearchFilter(query.IncludePreRelease), 0,
                         int.MaxValue, new NuGetLogger(_logger), cancellationToken);
                     foreach (var result in results.ToArray())
                     {
                         try
-                        {
-                            var title = result.Title;
-                            packages.Add(new PackageQueryResult(result.Title));
+                        {                            
+                            var versionInfos = await result.GetVersionsAsync();
+                            var versions = versionInfos.Select(vi => vi.Version).OrderByDescending(v => v).Select(v => v.ToString()).ToArray();                            
+                            packages.Add(new PackageQueryResult(result.Identity.Id,result.Description, result.DownloadCount,sourceRepository.PackageSource.Name, sourceRepository.PackageSource.Source, versions));
                         }
                         catch (Exception e)
                         {

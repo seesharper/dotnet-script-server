@@ -2,13 +2,15 @@
 {
     public class Response
     {
-        public Response(string type, object payLoad, bool isSuccessful = true)
+        public Response(long id, string type, object payLoad, bool isSuccessful = true)
         {
+            Id = id;
             Type = type;
             PayLoad = payLoad;
             IsSuccessful = isSuccessful;
         }
 
+        public long Id { get; }
         public string Type { get; }
 
         public object PayLoad { get; }
