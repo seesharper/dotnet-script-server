@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Dotnet.Script.Server.CQRS;
 using Dotnet.Script.Server.Logging;
 using Dotnet.Script.Server.NuGet;
+using Dotnet.Script.Server.Scaffolding.UnitTesting;
 using Newtonsoft.Json.Linq;
 
 namespace Dotnet.Script.Server.Stdio
@@ -19,12 +20,17 @@ namespace Dotnet.Script.Server.Stdio
 
         private readonly Dictionary<string, Func<object, Task<object>>> _requestHandlers = new Dictionary<string, Func<object, Task<object>>>();
 
-        public StdioApplication(TextWriter output, TextReader input, IQueryExecutor queryExecutor, Logger logger)
+        public StdioApplication(TextWriter output, TextReader input, IQueryExecutor queryExecutor, ICommandExecutor commandExecutor, Logger logger)
         {
             _output = output;
             _input = input;
             _logger = logger;
-            _requestHandlers.Add(RequestType.PackageQuery, async (query) => await queryExecutor.ExecuteAsync(((JObject)query).ToObject<PackageQuery>()));            
+            _requestHandlers.Add(RequestType.PackageQuery, async (query) => await queryExecutor.ExecuteAsync(((JObject)query).ToObject<PackageQuery>()));
+            _requestHandlers.Add(RequestType.CreateUnitTestCommand, async (command) =>
+            {
+                await commandExecutor.ExecuteAsync(((JObject) command).ToObject<CreateUnitTestCommand>());
+                return Task.CompletedTask;
+            });
         }
 
         public void Run()
@@ -69,6 +75,7 @@ namespace Dotnet.Script.Server.Stdio
         private static class RequestType
         {
             public const string PackageQuery = "PackageQuery";
+            public const string CreateUnitTestCommand = "CreateUnitTestCommand";
             public const string Stop = "Stop";
         }
     }

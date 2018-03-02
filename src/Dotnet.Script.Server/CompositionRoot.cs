@@ -10,6 +10,7 @@ namespace Dotnet.Script.Server
         {
             serviceRegistry
                 .RegisterQueryHandlers()
+                .RegisterCommandHandlers()
                 .Register<ISourceRepositoryProviderFactory, SourceRepositoryProviderFactory>(new PerContainerLifetime());
         }
     }

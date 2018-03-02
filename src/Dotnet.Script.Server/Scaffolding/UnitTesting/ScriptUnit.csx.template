@@ -1,0 +1,20 @@
+﻿#load "nuget:ScriptUnit, *"
+#r "nuget:FluentAssertions, *"
+
+using static ScriptUnit;   
+using FluentAssertions;
+
+return await AddTestsFrom<SampleTests>().Execute();
+
+public class SampleTests
+{    
+    public void Success()
+    {
+        "Ok".Should().Be("Ok");
+    }
+  
+  	public void Fail()
+    {
+        "Ok".Should().NotBe("Ok");
+    }
+}
