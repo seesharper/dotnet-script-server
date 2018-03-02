@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using Dotnet.Script.Server.CQRS;
 using Dotnet.Script.Server.NuGet;
+using Dotnet.Script.Server.Scaffolding.UnitTesting;
 using FluentAssertions;
 using Moq;
 using Newtonsoft.Json;
@@ -80,10 +81,31 @@ namespace Dotnet.Script.Server.Stdio.Tests
             application.Run();
         }
 
+        [Fact]
+        public void ShouldCreateTestScript()
+        {
+            var output = new TestTextWriter(message =>
+            {
+                var response = JsonConvert.DeserializeObject<Response>(message);
+                response.IsSuccessful.Should().BeTrue();
+            });
+
+            using (var disposableFolder = new DisposableFolder())
+            {
+                var application = AppBuilder.Default.UseStartup(new ConfigurableStartup(r =>
+                {
+                    r.RegisterInstance(CreateReaderWithCreateUnitTestCommand(disposableFolder.Path), "input");
+                    r.RegisterInstance<TextWriter>(output, "output");
+                })).Build();
+
+                application.Run();
+            }
+
+                
+        }
 
 
-
-        private TextReader CreateReaderWithPackageQuery(string packageId)
+        private static TextReader CreateReaderWithPackageQuery(string packageId)
         {
             var query = new PackageQuery(packageId, Environment.CurrentDirectory, true);
             var request = new Request(1, "PackageQuery", query);
@@ -93,6 +115,19 @@ namespace Dotnet.Script.Server.Stdio.Tests
             sb.AppendLine(JsonConvert.SerializeObject(new Request(2, "Stop")));
 
             var stringReader = new StringReader(sb.ToString()); 
+            return stringReader;
+        }
+
+        private static TextReader CreateReaderWithCreateUnitTestCommand(string folder)
+        {
+            var command = new CreateUnitTestCommand(folder);
+            var request = new Request(1, "CreateUnitTestCommand", command);
+            var json = JsonConvert.SerializeObject(request);
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine(json);
+            sb.AppendLine(JsonConvert.SerializeObject(new Request(2, "Stop")));
+
+            var stringReader = new StringReader(sb.ToString());
             return stringReader;
         }
     }
