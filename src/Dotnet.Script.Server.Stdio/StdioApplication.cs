@@ -28,8 +28,9 @@ namespace Dotnet.Script.Server.Stdio
             _requestHandlers.Add(RequestType.PackageQuery, async (query) => await queryExecutor.ExecuteAsync(((JObject)query).ToObject<PackageQuery>()));
             _requestHandlers.Add(RequestType.CreateUnitTestCommand, async (command) =>
             {
-                await commandExecutor.ExecuteAsync(((JObject) command).ToObject<CreateUnitTestCommand>());
-                return Task.CompletedTask;
+                var createUnitTestCommmand = ((JObject) command).ToObject<CreateUnitTestCommand>();
+                await commandExecutor.ExecuteAsync(createUnitTestCommmand);
+                return createUnitTestCommmand.PathToCreatedUnitTest;
             });
         }
 

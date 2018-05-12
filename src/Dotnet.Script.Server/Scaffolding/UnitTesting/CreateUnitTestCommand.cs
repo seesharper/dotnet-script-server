@@ -18,5 +18,7 @@
         /// Gets the current working folder for which to create the unit test file.
         /// </summary>
         public string WorkingFolder { get; }
+
+        public string PathToCreatedUnitTest { get; set; }
     }
 }

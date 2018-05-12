@@ -21,6 +21,8 @@ namespace Dotnet.Script.Server.Scaffolding.UnitTesting
                 await streamWriter.WriteAsync(template);
                 await streamWriter.FlushAsync();
             }
+
+            command.PathToCreatedUnitTest = fileName;
         }
 
         private string GetNextAvailableFilename(string workingFolder)
